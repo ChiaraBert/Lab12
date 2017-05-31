@@ -7,15 +7,22 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 
 public class RiversDAO {
+	
+	
+	
+	
 
 	public List<River> getAllRivers() {
 		final String sql = "SELECT id, name FROM river";
 
-		List<River> rivers = new LinkedList<River>();
+		List<River> rivers= new LinkedList<River>();
+		
 
 		try {
 			Connection conn = DBConnect.getConnection();
@@ -36,19 +43,20 @@ public class RiversDAO {
 		return rivers;
 	}
 
-	public List<Flow> getAllFlows(List<River> rivers) {
-		final String sql = "SELECT id, day, flow, river FROM flow";
+		
+	public LinkedList<Flow> getFlows(River r) {
+		final String sql = "SELECT id, day, flow, river FROM flow WHERE river=? ORDER BY day ";
 
-		List<Flow> flows = new LinkedList<Flow>();
+		LinkedList<Flow> flows = new LinkedList<Flow>();
 
 		try {
 			Connection conn = DBConnect.getConnection();
 			PreparedStatement st = conn.prepareStatement(sql);
+			st.setInt(1, r.getId());
 			ResultSet res = st.executeQuery();
 
 			while (res.next()) {
-				flows.add(new Flow(res.getDate("day").toLocalDate(), res.getDouble("flow"),
-						rivers.get(rivers.indexOf(new River(res.getInt("river"))))));
+				flows.add(new Flow(res.getInt("id"), res.getTimestamp("day").toLocalDateTime(), res.getDouble("flow"),r));
 			}
 
 			conn.close();
@@ -67,8 +75,8 @@ public class RiversDAO {
 		List<River> rivers = dao.getAllRivers();
 		System.out.println(rivers);
 
-		List<Flow> flows = dao.getAllFlows(rivers);
-		System.out.format("Loaded %d flows\n", flows.size());
+		//List<Flow> flows = dao.getFlows(rivers);
+		//System.out.format("Loaded %d flows\n", flows.size());
 		// System.out.println(flows) ;
 	}
 
